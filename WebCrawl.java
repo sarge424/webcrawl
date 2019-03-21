@@ -14,15 +14,19 @@ public class WebCrawl {
 	public static Queue<String> q = new LinkedList<>();
 	public static Set<String> sitesCrawled = new HashSet<>();
 	public static String regex = "http[s]*://(\\w+\\.)*(\\w+)";
+	public static int maxSites = 10;
+	public static boolean[][] matrix;
 	
 	public static void crawl(String root) throws IOException{
 		q.add(root);
-		String curr = q.poll();
 		BufferedReader br = null;
-		System.out.println("===Site crawled - " + curr);
 		
 		while(!q.isEmpty()) {
-			if(sitesCrawled.size() == 100)
+			String curr = q.poll();																																									
+			System.out.println("===Crawling in - " + curr);
+			System.out.println("   (" + sitesCrawled.size() + " found so far)");
+			
+			if(sitesCrawled.size() >= maxSites)
 				return;
 			
 			URL url = null;
@@ -70,6 +74,50 @@ public class WebCrawl {
 		}
 	}
 	
+	public static boolean[] checkLink(String root, String[] target) {
+		BufferedReader br = null;
+		URL url = null;
+		
+		try {
+			url = new URL(root);
+			br = new BufferedReader(new InputStreamReader(url.openStream()));
+		}catch(Exception e){
+		}
+		
+		System.out.println("--URL valid");
+		
+		StringBuilder sb = new StringBuilder();
+		String tmp = null;
+		
+		try {
+			while((tmp = br.readLine()) != null) {
+				sb.append(tmp);
+			}
+		}catch(IOException e) {
+		}
+		
+		System.out.println("--got string");
+		
+		tmp = sb.toString();
+		Pattern pattern = Pattern.compile(regex);
+		Matcher matcher = pattern.matcher(tmp);
+		
+		boolean[] ans = new boolean[target.length];
+		
+		while(matcher.find()) {
+			System.out.println("Matching...");
+			String w = matcher.group();
+			
+			for(int x = 0; x < target.length; x++) {
+				if(w.equals(target[x]))
+					ans[x] = true;
+				else
+					ans[x] = false;
+			}
+		}
+		return ans;
+	}
+	
 	public static void showResults() {
 		System.out.println("---------------------------RESULTS-----------------------");
 		System.out.println(sitesCrawled.size() + " sites crawled:-\n");
@@ -82,7 +130,38 @@ public class WebCrawl {
 	public static void main(String[] args) {
 		try {
 			crawl("https://ishahomeschool.org");
+			System.out.println("DONE!!!!");
 			showResults();
 		} catch (IOException e) {}
+		
+		System.out.println("Results Complete");
+		
+		matrix = new boolean[sitesCrawled.size()][sitesCrawled.size()];
+		
+		String[] sites = new String[sitesCrawled.size()];
+
+		int k = 0;
+		for (String i: sitesCrawled)
+			sites[k++] = i;
+		
+		System.out.println("Site List Complete");
+		
+		for(int x = 0; x < sites.length; x++) {
+			for(int y = 0; y < sites.length; y++) {
+				matrix[x][y] = checkLink(sites[x], sites[y]);
+			}
+		}
+		
+		System.out.println("Checking Links Complete");
+		
+		for(int x = 0; x < sites.length; x++) {
+			for(int y = 0; y < sites.length; y++) {
+				if(matrix[x][y])
+					System.out.print("1 ");
+				else
+					System.out.print("0 ");
+			}
+			System.out.println();
+		}
 	}
 }
