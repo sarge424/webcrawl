@@ -14,7 +14,7 @@ public class WebCrawl {
 	public static Queue<String> q = new LinkedList<>();
 	public static Set<String> sitesCrawled = new HashSet<>();
 	public static String regex = "http[s]*://(\\w+\\.)*(\\w+)";
-	public static int maxSites = 10;
+	public static int maxSites = 25;
 	public static boolean[][] matrix;
 	
 	public static void crawl(String root) throws IOException{
@@ -74,7 +74,7 @@ public class WebCrawl {
 		}
 	}
 	
-	public static boolean[] checkLink(String root, String[] target) {
+	public static boolean checkLink(String root, String target) {
 		BufferedReader br = null;
 		URL url = null;
 		
@@ -82,6 +82,7 @@ public class WebCrawl {
 			url = new URL(root);
 			br = new BufferedReader(new InputStreamReader(url.openStream()));
 		}catch(Exception e){
+			return false;
 		}
 		
 		System.out.println("--URL valid");
@@ -94,6 +95,7 @@ public class WebCrawl {
 				sb.append(tmp);
 			}
 		}catch(IOException e) {
+			return false;
 		}
 		
 		System.out.println("--got string");
@@ -102,20 +104,14 @@ public class WebCrawl {
 		Pattern pattern = Pattern.compile(regex);
 		Matcher matcher = pattern.matcher(tmp);
 		
-		boolean[] ans = new boolean[target.length];
-		
+		System.out.println("Matching...");
 		while(matcher.find()) {
-			System.out.println("Matching...");
 			String w = matcher.group();
 			
-			for(int x = 0; x < target.length; x++) {
-				if(w.equals(target[x]))
-					ans[x] = true;
-				else
-					ans[x] = false;
-			}
+			if(w.equals(target))
+				return true;
 		}
-		return ans;
+		return false;
 	}
 	
 	public static void showResults() {
@@ -146,9 +142,12 @@ public class WebCrawl {
 		
 		System.out.println("Site List Complete");
 		
+		int counter = 1;
 		for(int x = 0; x < sites.length; x++) {
-			for(int y = 0; y < sites.length; y++) {
-				matrix[x][y] = checkLink(sites[x], sites[y]);
+			for(int y =0; y < sites.length; y++) {
+				System.out.println("-->Checking link " + counter + " of " + Math.pow(sites.length, 2) + ".");
+				matrix[y][x] = checkLink(sites[x], sites[y]);
+				counter++;
 			}
 		}
 		
